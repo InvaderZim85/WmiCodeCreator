@@ -1,0 +1,41 @@
+﻿<mah:MetroWindow
+    x:Class="WmiCodeCreator.View.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:WmiCodeCreator.View.Components"
+    xmlns:controls="clr-namespace:Gemini.Modules.CodeEditor.Controls;assembly=Gemini.Modules.CodeEditor"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:local="clr-namespace:WmiCodeCreator.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModel="clr-namespace:WmiCodeCreator.ViewModel"
+    Title="WMI Code Creator"
+    Width="838.095"
+    Height="585.065"
+    mah:DialogParticipation.Register="{Binding}"
+    Loaded="MainWindow_OnLoaded"
+    mc:Ignorable="d">
+    <Window.DataContext>
+        <viewModel:MainWindowViewModel />
+    </Window.DataContext>
+    <DockPanel LastChildFill="True">
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Program">
+                <MenuItem Header="Close" />
+            </MenuItem>
+            <MenuItem Header="Help">
+                <MenuItem Header="Query for WMI data" />
+                <MenuItem Header="Executing a method in WMI" />
+                <MenuItem Header="Receiving an event" />
+                <MenuItem Header="Browsing WMI namespace" />
+            </MenuItem>
+        </Menu>
+
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem Content="Version" />
+        </StatusBar>
+
+        <ContentControl/>
+    </DockPanel>
+</mah:MetroWindow>
