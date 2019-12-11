@@ -25,6 +25,11 @@ namespace WmiCodeCreator.ViewModel
         private IDialogCoordinator _dialogCoordinator;
 
         /// <summary>
+        /// Contains the cancellation token source
+        /// </summary>
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+        /// <summary>
         /// The action to set the source code
         /// </summary>
         private Action<string> _setSourceCode;
@@ -247,8 +252,7 @@ namespace WmiCodeCreator.ViewModel
                 SelectedProperties == null || !SelectedProperties.Any())
                 return;
 
-            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            var token = cancellationTokenSource.Token;
+            var token = _cancellationTokenSource.Token;
 
             var controller =
                 await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the values",
@@ -257,7 +261,7 @@ namespace WmiCodeCreator.ViewModel
 
             controller.Canceled += (s, e) =>
             {
-                cancellationTokenSource.Cancel();
+                _cancellationTokenSource.Cancel();
             };
 
             try
@@ -276,10 +280,14 @@ namespace WmiCodeCreator.ViewModel
             {
                 await _dialogCoordinator.ShowMessageAsync(this, "Warning", "Action aborted.");
             }
+            catch (Exception ex)
+            {
+                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                    $"An error has occured while loading the values.\r\n\r\nMessage: {ex.Message}");
+            }
             finally
             {
                 await controller.CloseAsync();
-                cancellationTokenSource.Dispose();
             }
         }
 

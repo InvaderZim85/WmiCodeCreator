@@ -132,11 +132,6 @@ namespace WmiCodeCreator.Business
             foreach (var wmiObject in searcher.Get())
             {
                 // NOTE: Currently only 'TextFormat.Mof' is supported by the 'GetText' method!
-                result.AddRange(from property in properties
-                    where !wmiObject.Properties[property].IsArray
-                    select new ValueItem(count, wmiObject.GetText(TextFormat.Mof), property,
-                        wmiObject.GetPropertyValue(property)));
-
                 foreach (var property in properties)
                 {
                     if (token.IsCancellationRequested)
