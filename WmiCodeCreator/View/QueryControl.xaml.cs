@@ -25,10 +25,22 @@ namespace WmiCodeCreator.View
         /// <summary>
         /// Init the control
         /// </summary>
-        public void InitControl()
+        /// <param name="dialogCoordinator">The instance of the mah apps dialog coordinator</param>
+        public void InitControl(IDialogCoordinator dialogCoordinator)
         {
-            if (DataContext is QueryControlViewModel viewModel)
-                viewModel.InitViewModel(DialogCoordinator.Instance);
+            if (!(DataContext is QueryControlViewModel viewModel)) 
+                return;
+
+            viewModel.InitViewModel(dialogCoordinator, SetSourceCode);
+        }
+
+        /// <summary>
+        /// Sets the text of the source code control
+        /// </summary>
+        /// <param name="sourceCode">The source code</param>
+        private void SetSourceCode(string sourceCode)
+        {
+            CodeEditorControl.Text = sourceCode;
         }
     }
 }

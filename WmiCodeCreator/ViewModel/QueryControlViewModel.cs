@@ -1,5 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Management;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using Gemini.Framework;
 using MahApps.Metro.Controls.Dialogs;
+using WmiCodeCreator.Business;
 using WmiCodeCreator.DataObject;
 using ZimLabs.WpfBase;
 
@@ -16,14 +25,24 @@ namespace WmiCodeCreator.ViewModel
         private IDialogCoordinator _dialogCoordinator;
 
         /// <summary>
+        /// The action to set the source code
+        /// </summary>
+        private Action<string> _setSourceCode;
+
+        /// <summary>
+        /// Contains the source code
+        /// </summary>
+        private string _sourceCode;
+
+        /// <summary>
         /// Backing field for <see cref="Namespaces"/>
         /// </summary>
-        private List<string> _namespaces;
+        private List<NamespaceItem> _namespaces;
 
         /// <summary>
         /// Gets or sets the list with the WMI namespaces
         /// </summary>
-        public List<string> Namespaces
+        public List<NamespaceItem> Namespaces
         {
             get => _namespaces;
             set => SetField(ref _namespaces, value);
@@ -32,26 +51,39 @@ namespace WmiCodeCreator.ViewModel
         /// <summary>
         /// Backing field for <see cref="SelectedNamespace"/>
         /// </summary>
-        private string _selectedNamespace;
+        private NamespaceItem _selectedNamespace;
 
         /// <summary>
         /// Gets or sets the selected WMI namespace
         /// </summary>
-        public string SelectedNamespace
+        public NamespaceItem SelectedNamespace
         {
             get => _selectedNamespace;
-            set => SetField(ref _selectedNamespace, value);
+            set
+            {
+                if (SetField(ref _selectedNamespace, value) && value != null)
+                {
+                    if (value.Classes != null && value.Classes.Any())
+                    {
+                        Classes = value.Classes;
+                    }
+                    else
+                    {
+                        LoadClasses();
+                    }
+                }
+            }
         }
 
         /// <summary>
         /// Backing field for <see cref="Classes"/>
         /// </summary>
-        private List<string> _classes;
+        private List<ClassItem> _classes;
 
         /// <summary>
         /// Gets or sets the list with the classes of the WMI namespace
         /// </summary>
-        public List<string> Classes
+        public List<ClassItem> Classes
         {
             get => _classes;
             set => SetField(ref _classes, value);
@@ -60,15 +92,28 @@ namespace WmiCodeCreator.ViewModel
         /// <summary>
         /// Backing field for <see cref="SelectedClass"/>
         /// </summary>
-        private string _selectedClass;
+        private ClassItem _selectedClass;
 
         /// <summary>
         /// Gets or sets the selected WMI class
         /// </summary>
-        public string SelectedClass
+        public ClassItem SelectedClass
         {
             get => _selectedClass;
-            set => SetField(ref _selectedClass, value);
+            set
+            {
+                if (SetField(ref _selectedClass, value) && value != null)
+                {
+                    if (value.Properties != null && value.Properties.Any())
+                    {
+                        Properties = value.Properties;
+                    }
+                    else
+                    {
+                        LoadProperties();
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -83,6 +128,20 @@ namespace WmiCodeCreator.ViewModel
         {
             get => _properties;
             set => SetField(ref _properties, value);
+        }
+
+        /// <summary>
+        /// Backing field for <see cref="SelectedProperties"/>
+        /// </summary>
+        private List<PropertyItem> _selectedProperties = new List<PropertyItem>();
+
+        /// <summary>
+        /// Gets or sets the list with the selected properties
+        /// </summary>
+        public List<PropertyItem> SelectedProperties
+        {
+            get => _selectedProperties;
+            set => SetField(ref _selectedProperties, value);
         }
 
         /// <summary>
@@ -103,9 +162,142 @@ namespace WmiCodeCreator.ViewModel
         /// Init the view model
         /// </summary>
         /// <param name="dialogCoordinator">The instance of the mah apps dialog coordinator</param>
-        public void InitViewModel(IDialogCoordinator dialogCoordinator)
+        /// <param name="setSourceCode">The action to set the source code</param>
+        public void InitViewModel(IDialogCoordinator dialogCoordinator, Action<string> setSourceCode)
         {
             _dialogCoordinator = dialogCoordinator;
+
+            _setSourceCode = setSourceCode;
+
+            Namespaces = WmiHelper.Namespaces;
+        }
+
+        /// <summary>
+        /// The command to load the values
+        /// </summary>
+        public ICommand LoadValuesCommand => new DelegateCommand(LoadValues);
+
+        /// <summary>
+        /// The command to create the code
+        /// </summary>
+        public ICommand CreateCodeCommand => new DelegateCommand(CreateCode);
+
+        /// <summary>
+        /// Loads the classes
+        /// </summary>
+        private async void LoadClasses()
+        {
+            if (string.IsNullOrEmpty(SelectedNamespace?.Name))
+                return;
+
+            var controller =
+                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the classes");
+
+            try
+            {
+                var classes = await Task.Run(() => WmiHelper.LoadClasses(SelectedNamespace.Name));
+                Classes = classes;
+                SelectedNamespace.Classes = classes;
+            }
+            catch (ManagementException mex)
+            {
+                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                    $"An error has occured while loading the classes.\r\n\r\nMessage: {mex.Message}");
+            }
+            finally
+            {
+                await controller.CloseAsync();
+            }
+        }
+
+        /// <summary>
+        /// Loads the properties of the selected class
+        /// </summary>
+        private async void LoadProperties()
+        {
+            if (string.IsNullOrEmpty(SelectedNamespace?.Name) || string.IsNullOrEmpty(SelectedClass?.Name))
+                return;
+
+            var controller =
+                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the properties");
+
+            try
+            {
+                var properties = await Task.Run(() => WmiHelper.LoadProperties(SelectedNamespace.Name, SelectedClass.Name));
+                Properties = properties;
+                SelectedClass.Properties = properties;
+            }
+            catch (ManagementException mex)
+            {
+                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                    $"An error has occured while loading the properties.\r\n\r\nMessage: {mex.Message}");
+            }
+            finally
+            {
+                await controller.CloseAsync();
+            }
+        }
+
+        /// <summary>
+        /// Loads the values of the selected property, class and namespace
+        /// </summary>
+        private async void LoadValues()
+        {
+            if (string.IsNullOrEmpty(SelectedNamespace?.Name) || string.IsNullOrEmpty(SelectedClass?.Name) ||
+                SelectedProperties == null || !SelectedProperties.Any())
+                return;
+
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var token = cancellationTokenSource.Token;
+
+            var controller =
+                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the values",
+                    true);
+            controller.SetIndeterminate();
+
+            controller.Canceled += (s, e) =>
+            {
+                cancellationTokenSource.Cancel();
+            };
+
+            try
+            {
+                var values = await Task.Run(() => WmiHelper.LoadValues(SelectedNamespace.Name, SelectedClass.Name,
+                    SelectedProperties.Select(s => s.Name).ToList(), token), token);
+
+                Values = values;
+            }
+            catch (ManagementException mex)
+            {
+                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                    $"An error has occured while loading the values.\r\n\r\nMessage: {mex.Message}");
+            }
+            catch (TaskCanceledException)
+            {
+                await _dialogCoordinator.ShowMessageAsync(this, "Warning", "Action aborted.");
+            }
+            finally
+            {
+                await controller.CloseAsync();
+                cancellationTokenSource.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Creates the csharp code according to the selected items
+        /// </summary>
+        private async void CreateCode()
+        {
+            try
+            {
+                _sourceCode = CodeCreator.CreateCSharpCode(SelectedNamespace, SelectedClass, SelectedProperties);
+                _setSourceCode(_sourceCode);
+            }
+            catch (Exception ex)
+            {
+                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                    $"An error has occured while creating the code.\r\n\r\nMessage: {ex.Message}");
+            }
         }
     }
 }

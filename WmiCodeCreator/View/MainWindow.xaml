@@ -22,20 +22,22 @@
     <DockPanel LastChildFill="True">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Program">
-                <MenuItem Header="Close" />
+                <MenuItem Click="MainMenuProgramClose_Click" Header="Close" />
             </MenuItem>
-            <MenuItem Header="Help">
-                <MenuItem Header="Query for WMI data" />
-                <MenuItem Header="Executing a method in WMI" />
-                <MenuItem Header="Receiving an event" />
-                <MenuItem Header="Browsing WMI namespace" />
-            </MenuItem>
+            <MenuItem
+                Command="{Binding MenuCommand}"
+                CommandParameter="{x:Static local:MenuType.Query}"
+                Header="Query" />
+            <MenuItem
+                Command="{Binding MenuCommand}"
+                CommandParameter="{x:Static local:MenuType.Help}"
+                Header="Help" />
         </Menu>
 
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem Content="Version" />
         </StatusBar>
 
-        <ContentControl/>
+        <ContentControl Content="{Binding Control}" />
     </DockPanel>
 </mah:MetroWindow>

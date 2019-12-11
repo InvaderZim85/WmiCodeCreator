@@ -18,12 +18,6 @@
                 <Setter Property="HorizontalAlignment" Value="Right" />
                 <Setter Property="VerticalAlignment" Value="Center" />
             </Style>
-
-            <Style TargetType="{x:Type Border}">
-                <Setter Property="BorderBrush" Value="LightGray" />
-                <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="Margin" Value="3" />
-            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

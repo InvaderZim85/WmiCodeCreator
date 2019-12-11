@@ -24,7 +24,18 @@ namespace WmiCodeCreator.View
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
             if (DataContext is MainWindowViewModel viewModel)
+            {
                 viewModel.InitViewModel(DialogCoordinator.Instance);
+                viewModel.InitWmiManager();
+            }
+        }
+
+        /// <summary>
+        /// Occurs when the user hits the close menu (Program > Close)
+        /// </summary>
+        private void MainMenuProgramClose_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 }

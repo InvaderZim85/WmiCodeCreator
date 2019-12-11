@@ -7,6 +7,11 @@ namespace WmiCodeCreator.DataObject
     internal class ValueItem
     {
         /// <summary>
+        /// Gets the id
+        /// </summary>
+        public int Id { get; }
+
+        /// <summary>
         /// Gets the name of the instance
         /// </summary>
         public string Instance { get; }
@@ -24,14 +29,25 @@ namespace WmiCodeCreator.DataObject
         /// <summary>
         /// Creates a new instance of the <see cref="ValueItem"/>
         /// </summary>
+        /// <param name="id">The id</param>
         /// <param name="instance">The name of the instance</param>
         /// <param name="property">The name of the property</param>
         /// <param name="value">The value</param>
-        public ValueItem(string instance, string property, object value)
+        public ValueItem(int id, string instance, string property, object value)
         {
+            Id = id;
             Instance = instance;
             Property = property;
             Value = value?.ToString() ?? "";
+        }
+
+        /// <summary>
+        /// Returns the value of the item
+        /// </summary>
+        /// <returns>The values</returns>
+        public override string ToString()
+        {
+            return $"{Id,2} - {Property}: {Value}";
         }
     }
 }

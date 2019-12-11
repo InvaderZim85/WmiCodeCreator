@@ -117,18 +117,32 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Business\CodeCreator.cs" />
     <Compile Include="Business\WmiHelper.cs" />
+    <Compile Include="DataObject\ClassItem.cs" />
+    <Compile Include="DataObject\NamespaceItem.cs" />
     <Compile Include="DataObject\PropertyItem.cs" />
     <Compile Include="DataObject\ValueItem.cs" />
+    <None Include="Templates\CSharpClassTemplate.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Compile Include="ViewModel\MainWindowViewModel.cs" />
     <Compile Include="ViewModel\QueryControlViewModel.cs" />
+    <Compile Include="View\Components\CodeControl.xaml.cs">
+      <DependentUpon>CodeControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\Components\CustomListBox.cs" />
     <Compile Include="View\Components\Headline.xaml.cs">
       <DependentUpon>Headline.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\InfoControl.xaml.cs">
+      <DependentUpon>InfoControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\IUserControl.cs" />
     <Compile Include="View\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\MenuType.cs" />
     <Compile Include="View\QueryControl.xaml.cs">
       <DependentUpon>QueryControl.xaml</DependentUpon>
     </Compile>
@@ -162,7 +176,15 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Page Include="View\Components\CodeControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\Components\Headline.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\InfoControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
