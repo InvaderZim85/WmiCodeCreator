@@ -31,7 +31,7 @@ namespace WmiCodeCreator.View
             if (!(DataContext is QueryControlViewModel viewModel)) 
                 return;
 
-            viewModel.InitViewModel(dialogCoordinator, SetSourceCode);
+            viewModel.InitViewModel(dialogCoordinator, SetSourceCode, SetPropertyText);
         }
 
         /// <summary>
@@ -41,6 +41,15 @@ namespace WmiCodeCreator.View
         private void SetSourceCode(string sourceCode)
         {
             CodeEditorControl.Text = sourceCode;
+        }
+
+        /// <summary>
+        /// Sets the text of the property text control
+        /// </summary>
+        /// <param name="propertyText">The property text</param>
+        private void SetPropertyText(string propertyText)
+        {
+            CodeEditorPropertyText.Text = propertyText;
         }
     }
 }

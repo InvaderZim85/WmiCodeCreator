@@ -2,19 +2,18 @@
     x:Class="WmiCodeCreator.View.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:components="clr-namespace:WmiCodeCreator.View.Components"
-    xmlns:controls="clr-namespace:Gemini.Modules.CodeEditor.Controls;assembly=Gemini.Modules.CodeEditor"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
-    xmlns:local="clr-namespace:WmiCodeCreator.View"
     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:paramValues="clr-namespace:WmiCodeCreator.View.ParamValues"
     xmlns:viewModel="clr-namespace:WmiCodeCreator.ViewModel"
     Title="WMI Code Creator"
-    Width="838.095"
-    Height="585.065"
+    Width="1000"
+    Height="800"
     mah:DialogParticipation.Register="{Binding}"
     Loaded="MainWindow_OnLoaded"
+    ResizeMode="CanResizeWithGrip"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.DataContext>
         <viewModel:MainWindowViewModel />
@@ -26,11 +25,15 @@
             </MenuItem>
             <MenuItem
                 Command="{Binding MenuCommand}"
-                CommandParameter="{x:Static local:MenuType.Query}"
+                CommandParameter="{x:Static paramValues:MenuType.Query}"
                 Header="Query" />
             <MenuItem
                 Command="{Binding MenuCommand}"
-                CommandParameter="{x:Static local:MenuType.Help}"
+                CommandParameter="{x:Static paramValues:MenuType.Browse}"
+                Header="Browse" />
+            <MenuItem
+                Command="{Binding MenuCommand}"
+                CommandParameter="{x:Static paramValues:MenuType.Help}"
                 Header="Help" />
         </Menu>
 

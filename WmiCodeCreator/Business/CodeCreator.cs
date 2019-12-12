@@ -17,7 +17,7 @@ namespace WmiCodeCreator.Business
         /// <returns>The template</returns>
         private static string LoadTemplate()
         {
-            var path = Path.Combine(Global.GetBaseFolder(), "Templates", "CSharpClassTemplate.cs");
+            var path = Path.Combine(Global.GetBaseFolder(), "Templates", "CSharpClassTemplate.txt");
 
             if (!File.Exists(path))
                 throw new FileNotFoundException("The C# template file is missing.");

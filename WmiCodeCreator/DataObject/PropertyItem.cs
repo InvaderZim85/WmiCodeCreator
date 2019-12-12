@@ -18,6 +18,11 @@ namespace WmiCodeCreator.DataObject
         public string Type { get; }
 
         /// <summary>
+        /// Gets or sets the description of the property
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="PropertyItem"/>
         /// </summary>
         /// <param name="name">The name of the property</param>

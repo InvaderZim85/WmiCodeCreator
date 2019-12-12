@@ -120,14 +120,19 @@
     <Compile Include="Business\CodeCreator.cs" />
     <Compile Include="Business\WmiHelper.cs" />
     <Compile Include="DataObject\ClassItem.cs" />
+    <Compile Include="DataObject\MethodItem.cs" />
     <Compile Include="DataObject\NamespaceItem.cs" />
     <Compile Include="DataObject\PropertyItem.cs" />
     <Compile Include="DataObject\ValueItem.cs" />
-    <None Include="Templates\CSharpClassTemplate.cs">
+    <Content Include="Templates\CSharpClassTemplate.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
+    <Compile Include="ViewModel\BrowseControlViewModel.cs" />
     <Compile Include="ViewModel\MainWindowViewModel.cs" />
     <Compile Include="ViewModel\QueryControlViewModel.cs" />
+    <Compile Include="View\BrowseControl.xaml.cs">
+      <DependentUpon>BrowseControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\Components\CodeControl.xaml.cs">
       <DependentUpon>CodeControl.xaml</DependentUpon>
     </Compile>
@@ -142,7 +147,8 @@
     <Compile Include="View\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\MenuType.cs" />
+    <Compile Include="View\ParamValues\CopyType.cs" />
+    <Compile Include="View\ParamValues\MenuType.cs" />
     <Compile Include="View\QueryControl.xaml.cs">
       <DependentUpon>QueryControl.xaml</DependentUpon>
     </Compile>
@@ -176,6 +182,10 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Page Include="View\BrowseControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\Components\CodeControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Management;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
-using Gemini.Framework;
 using MahApps.Metro.Controls.Dialogs;
 using WmiCodeCreator.Business;
 using WmiCodeCreator.DataObject;
+using WmiCodeCreator.View.ParamValues;
 using ZimLabs.WpfBase;
 
 namespace WmiCodeCreator.ViewModel
@@ -25,19 +27,24 @@ namespace WmiCodeCreator.ViewModel
         private IDialogCoordinator _dialogCoordinator;
 
         /// <summary>
-        /// Contains the cancellation token source
-        /// </summary>
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-
-        /// <summary>
         /// The action to set the source code
         /// </summary>
         private Action<string> _setSourceCode;
 
         /// <summary>
+        /// The action to set the property text
+        /// </summary>
+        private Action<string> _setPropertyText;
+
+        /// <summary>
         /// Contains the source code
         /// </summary>
         private string _sourceCode;
+
+        /// <summary>
+        /// Contains the property text
+        /// </summary>
+        private string _propertyText;
 
         /// <summary>
         /// Backing field for <see cref="Namespaces"/>
@@ -122,6 +129,20 @@ namespace WmiCodeCreator.ViewModel
         }
 
         /// <summary>
+        /// Backing field for <see cref="PropertyHeader"/>
+        /// </summary>
+        private string _propertyHeader = "Properties";
+
+        /// <summary>
+        /// Gets or sets the property header
+        /// </summary>
+        public string PropertyHeader
+        {
+            get => _propertyHeader;
+            set => SetField(ref _propertyHeader, value);
+        }
+
+        /// <summary>
         /// Backing field for <see cref="Properties"/>
         /// </summary>
         private List<PropertyItem> _properties;
@@ -150,29 +171,17 @@ namespace WmiCodeCreator.ViewModel
         }
 
         /// <summary>
-        /// Backing field for <see cref="Values"/>
-        /// </summary>
-        private List<ValueItem> _values;
-
-        /// <summary>
-        /// Gets or sets the list with the values
-        /// </summary>
-        public List<ValueItem> Values
-        {
-            get => _values;
-            set => SetField(ref _values, value);
-        }
-
-        /// <summary>
         /// Init the view model
         /// </summary>
         /// <param name="dialogCoordinator">The instance of the mah apps dialog coordinator</param>
         /// <param name="setSourceCode">The action to set the source code</param>
-        public void InitViewModel(IDialogCoordinator dialogCoordinator, Action<string> setSourceCode)
+        /// <param name="setPropertyText">The action to set the property text</param>
+        public void InitViewModel(IDialogCoordinator dialogCoordinator, Action<string> setSourceCode, Action<string> setPropertyText)
         {
             _dialogCoordinator = dialogCoordinator;
 
             _setSourceCode = setSourceCode;
+            _setPropertyText = setPropertyText;
 
             Namespaces = WmiHelper.Namespaces;
         }
@@ -188,6 +197,25 @@ namespace WmiCodeCreator.ViewModel
         public ICommand CreateCodeCommand => new DelegateCommand(CreateCode);
 
         /// <summary>
+        /// The command to copy the source code to the clip board
+        /// </summary>
+        public ICommand CopyCommand => new RelayCommand<CopyType>((t) =>
+        {
+            Clipboard.SetText(t == CopyType.PropertyText ? _propertyText : _sourceCode);
+        });
+
+        /// <summary>
+        /// The command to show the help
+        /// </summary>
+        public ICommand ShowHelpCommand => new DelegateCommand(() =>
+        {
+            var queryPath =
+                $"https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/{SelectedClass.Name.Replace("_", "-")}";
+
+            Process.Start(queryPath);
+        });
+
+        /// <summary>
         /// Loads the classes
         /// </summary>
         private async void LoadClasses()
@@ -200,7 +228,7 @@ namespace WmiCodeCreator.ViewModel
 
             try
             {
-                var classes = await Task.Run(() => WmiHelper.LoadClasses(SelectedNamespace.Name));
+                var classes = await Task.Run(() => WmiHelper.LoadClasses(SelectedNamespace.Name, false));
                 Classes = classes;
                 SelectedNamespace.Classes = classes;
             }
@@ -231,6 +259,8 @@ namespace WmiCodeCreator.ViewModel
                 var properties = await Task.Run(() => WmiHelper.LoadProperties(SelectedNamespace.Name, SelectedClass.Name));
                 Properties = properties;
                 SelectedClass.Properties = properties;
+
+                PropertyHeader = $"Properties ({properties.Count})";
             }
             catch (ManagementException mex)
             {
@@ -249,27 +279,21 @@ namespace WmiCodeCreator.ViewModel
         private async void LoadValues()
         {
             if (string.IsNullOrEmpty(SelectedNamespace?.Name) || string.IsNullOrEmpty(SelectedClass?.Name) ||
-                SelectedProperties == null || !SelectedProperties.Any())
+                SelectedProperties == null)
                 return;
 
-            var token = _cancellationTokenSource.Token;
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var token = cancellationTokenSource.Token;
 
             var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the values",
-                    true);
+                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the values.");
             controller.SetIndeterminate();
-
-            controller.Canceled += (s, e) =>
-            {
-                _cancellationTokenSource.Cancel();
-            };
 
             try
             {
-                var values = await Task.Run(() => WmiHelper.LoadValues(SelectedNamespace.Name, SelectedClass.Name,
-                    SelectedProperties.Select(s => s.Name).ToList(), token), token);
+                var values = await Task.Run(() => WmiHelper.LoadValues(SelectedNamespace.Name, SelectedClass.Name, token), token);
 
-                Values = values;
+                SetPropertyText(values);
             }
             catch (ManagementException mex)
             {
@@ -278,7 +302,8 @@ namespace WmiCodeCreator.ViewModel
             }
             catch (TaskCanceledException)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Warning", "Action aborted.");
+                await _dialogCoordinator.ShowMessageAsync(this, "Warning",
+                    "The process takes longer than expected and was aborted.");
             }
             catch (Exception ex)
             {
@@ -288,7 +313,27 @@ namespace WmiCodeCreator.ViewModel
             finally
             {
                 await controller.CloseAsync();
+                cancellationTokenSource.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Sets the property text
+        /// </summary>
+        /// <param name="values">The list with the values</param>
+        private void SetPropertyText(List<string> values)
+        {
+            var sb = new StringBuilder();
+
+            var count = 1;
+            foreach (var entry in values.Distinct())
+            {
+                sb.AppendLine($"---- {count++} ----");
+                sb.AppendLine(entry);
+            }
+
+            _propertyText = sb.ToString();
+            _setPropertyText(_propertyText);
         }
 
         /// <summary>

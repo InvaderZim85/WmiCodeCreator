@@ -10,6 +10,7 @@
     xmlns:local="clr-namespace:WmiCodeCreator.View"
     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:paramValues="clr-namespace:WmiCodeCreator.View.ParamValues"
     xmlns:viewModel="clr-namespace:WmiCodeCreator.ViewModel"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -38,7 +39,7 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <Grid.ColumnDefinitions>
@@ -81,7 +82,8 @@
                     Grid.Row="2"
                     Grid.Column="2"
                     Height="26"
-                    Margin="3">
+                    Margin="3"
+                    Command="{Binding ShowHelpCommand}">
                     <iconPacks:PackIconMaterial
                         Height="12"
                         HorizontalAlignment="Center"
@@ -96,7 +98,7 @@
                     FontStyle="Italic"
                     FontWeight="Light"
                     HeaderFontWeight="Bold"
-                    HeaderText="Properties"
+                    HeaderText="{Binding PropertyHeader}"
                     ShowIcon="False" />
 
                 <components:CustomListBox
@@ -124,63 +126,58 @@
                     Margin="3"
                     HorizontalAlignment="Right"
                     Command="{Binding LoadValuesCommand}"
-                    Content="Search for values" />
-
-                <components:Headline
-                    Grid.Row="6"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    FontStyle="Italic"
-                    FontWeight="Light"
-                    HeaderFontWeight="Bold"
-                    HeaderText="Values"
-                    ShowIcon="False" />
-
-                <ListBox
-                    Grid.Row="7"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    Margin="3"
-                    BorderBrush="LightGray"
-                    BorderThickness="1"
-                    ItemsSource="{Binding Values}" />
+                    Content="Gather values" />
             </Grid>
         </Border>
 
         <!--  Generated code  -->
-        <Border
-            Grid.Column="1"
-            BorderBrush="LightGray"
-            BorderThickness="1">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+        <TabControl Grid.Column="1" Margin="3">
+            <TabItem Header="Values">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <components:Headline HeaderFontStyle="Italic" HeaderText="Generated code" />
+                    <controls:CodeEditor
+                        x:Name="CodeEditorPropertyText"
+                        Grid.Row="0"
+                        BorderBrush="LightGray"
+                        BorderThickness="1" />
 
-                <controls:CodeEditor
-                    x:Name="CodeEditorControl"
-                    Grid.Row="1"
-                    SyntaxHighlighting="C#" />
-
-                <StackPanel
-                    Grid.Row="2"
-                    Grid.Column="0"
-                    FlowDirection="RightToLeft"
-                    Orientation="Horizontal">
                     <Button
+                        Grid.Row="1"
                         Width="70"
                         Margin="3"
-                        Content="Execute" />
-                    <Button
-                        Width="70"
-                        Margin="3"
+                        HorizontalAlignment="Right"
+                        Command="{Binding CopyCommand}"
+                        CommandParameter="{x:Static paramValues:CopyType.PropertyText}"
                         Content="Copy" />
-                </StackPanel>
-            </Grid>
-        </Border>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Generated code">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <controls:CodeEditor
+                        x:Name="CodeEditorControl"
+                        BorderBrush="LightGray"
+                        BorderThickness="1"
+                        SyntaxHighlighting="C#" />
+
+                    <Button
+                        Grid.Row="1"
+                        Width="70"
+                        Margin="3"
+                        HorizontalAlignment="Right"
+                        Command="{Binding CopyCommand}"
+                        CommandParameter="{x:Static paramValues:CopyType.SourceCode}"
+                        Content="Copy" />
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>

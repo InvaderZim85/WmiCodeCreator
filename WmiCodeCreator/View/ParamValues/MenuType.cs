@@ -1,4 +1,4 @@
-﻿namespace WmiCodeCreator.View
+﻿namespace WmiCodeCreator.View.ParamValues
 {
     /// <summary>
     /// Contains the different menu items
@@ -11,9 +11,14 @@
         Info,
 
         /// <summary>
-        /// Shows the query menu
+        /// Shows the query page
         /// </summary>
         Query,
+
+        /// <summary>
+        /// Shows the browse page
+        /// </summary>
+        Browse,
 
         /// <summary>
         /// Shows the help pdf

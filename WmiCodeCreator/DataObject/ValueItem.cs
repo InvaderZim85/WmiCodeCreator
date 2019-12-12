@@ -12,9 +12,9 @@ namespace WmiCodeCreator.DataObject
         public int Id { get; }
 
         /// <summary>
-        /// Gets the name of the instance
+        /// Gets the text of the object
         /// </summary>
-        public string Instance { get; }
+        public string Text { get; }
 
         /// <summary>
         /// Gets the name of the property
@@ -30,13 +30,13 @@ namespace WmiCodeCreator.DataObject
         /// Creates a new instance of the <see cref="ValueItem"/>
         /// </summary>
         /// <param name="id">The id</param>
-        /// <param name="instance">The name of the instance</param>
+        /// <param name="text">The text of the instance</param>
         /// <param name="property">The name of the property</param>
         /// <param name="value">The value</param>
-        public ValueItem(int id, string instance, string property, object value)
+        public ValueItem(int id, string text, string property, object value)
         {
             Id = id;
-            Instance = instance;
+            Text = text;
             Property = property;
             Value = value?.ToString() ?? "";
         }

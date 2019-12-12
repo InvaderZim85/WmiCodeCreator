@@ -9,6 +9,7 @@ using System.Windows.Input;
 using MahApps.Metro.Controls.Dialogs;
 using WmiCodeCreator.Business;
 using WmiCodeCreator.View;
+using WmiCodeCreator.View.ParamValues;
 using ZimLabs.Utility;
 using ZimLabs.WpfBase;
 
@@ -149,6 +150,9 @@ namespace WmiCodeCreator.ViewModel
                         break;
                     case MenuType.Query:
                         control = new QueryControl();
+                        break;
+                    case MenuType.Browse:
+                        control = new BrowseControl();
                         break;
                     case MenuType.Help:
                         var path = Path.Combine(Global.GetBaseFolder(), "Manual.pdf");

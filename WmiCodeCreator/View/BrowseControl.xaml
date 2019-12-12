@@ -1,0 +1,219 @@
+﻿<UserControl
+    x:Class="WmiCodeCreator.View.BrowseControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:WmiCodeCreator.View.Components"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WmiCodeCreator.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModel="clr-namespace:WmiCodeCreator.ViewModel"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mah:DialogParticipation.Register="{Binding}"
+    mc:Ignorable="d">
+    <UserControl.DataContext>
+        <viewModel:BrowseControlViewModel />
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <Style BasedOn="{StaticResource MetroListBox}" TargetType="{x:Type ListBox}">
+            <Setter Property="BorderBrush" Value="LightGray" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border
+            Grid.Column="0"
+            BorderBrush="LightGray"
+            BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <components:Headline
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    HeaderText="Selection" />
+
+                <Label
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Content="Namespace:" />
+                <ComboBox
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="3"
+                    ItemsSource="{Binding Namespaces}"
+                    SelectedItem="{Binding SelectedNamespace}" />
+                <Label
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Content="{Binding Namespaces.Count}" />
+
+                <Label
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Content="Class:" />
+                <ComboBox
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Margin="3"
+                    ItemsSource="{Binding Classes}"
+                    SelectedItem="{Binding SelectedClass}" />
+                <Label
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Content="{Binding Classes.Count}" />
+
+                <Label
+                    Grid.Row="3"
+                    Grid.Column="0"
+                    Content="Properties:" />
+                <ListBox
+                    Grid.Row="3"
+                    Grid.RowSpan="2"
+                    Grid.Column="1"
+                    Margin="3"
+                    ItemsSource="{Binding Properties}"
+                    SelectedItem="{Binding SelectedProperty}" />
+                <Label
+                    Grid.Row="3"
+                    Grid.Column="2"
+                    Content="{Binding Properties.Count}" />
+
+                <Button
+                    Grid.Row="5"
+                    Grid.Column="1"
+                    Width="110"
+                    Margin="3"
+                    HorizontalAlignment="Right"
+                    Command="{Binding LoadMethodsCommand}"
+                    Content="Load Methods" />
+                <Label
+                    Grid.Row="6"
+                    Grid.Column="0"
+                    Content="Methods:" />
+                <ListBox
+                    Grid.Row="6"
+                    Grid.RowSpan="2"
+                    Grid.Column="1"
+                    Margin="3"
+                    ItemsSource="{Binding Methods}"
+                    SelectedItem="{Binding SelectedMethod}" />
+                <Label
+                    Grid.Row="6"
+                    Grid.Column="2"
+                    Content="{Binding Methods.Count}" />
+
+                <Button
+                    Grid.Row="8"
+                    Grid.Column="1"
+                    Width="110"
+                    Margin="3"
+                    HorizontalAlignment="Right"
+                    Command="{Binding LoadQualifierCommand}"
+                    Content="Load qualifiers" />
+                <Label
+                    Grid.Row="9"
+                    Grid.Column="0"
+                    Content="Qualifiers:" />
+                <ListBox
+                    Grid.Row="9"
+                    Grid.RowSpan="2"
+                    Grid.Column="1"
+                    Margin="3"
+                    ItemsSource="{Binding Qualifier}" />
+                <Label
+                    Grid.Row="9"
+                    Grid.Column="2"
+                    Content="{Binding Qualifier.Count}" />
+            </Grid>
+        </Border>
+
+        <GridSplitter
+            Grid.Column="1"
+            Width="3"
+            HorizontalAlignment="Stretch" />
+
+        <Border
+            Grid.Column="2"
+            BorderBrush="LightGray"
+            BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <components:Headline Grid.Row="0" HeaderText="Description" />
+                <components:Headline
+                    Grid.Row="1"
+                    HeaderFontStyle="Italic"
+                    HeaderFontWeight="DemiBold"
+                    HeaderText="Class"
+                    ShowIcon="False" />
+                <TextBox
+                    Grid.Row="2"
+                    Margin="3"
+                    Text="{Binding DescriptionClass}"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto" />
+
+                <components:Headline
+                    Grid.Row="3"
+                    HeaderFontStyle="Italic"
+                    HeaderFontWeight="DemiBold"
+                    HeaderText="Property"
+                    ShowIcon="False" />
+                <TextBox
+                    Grid.Row="4"
+                    Margin="3"
+                    Text="{Binding DescriptionProperty}"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto" />
+
+                <components:Headline
+                    Grid.Row="5"
+                    HeaderFontStyle="Italic"
+                    HeaderFontWeight="DemiBold"
+                    HeaderText="Method"
+                    ShowIcon="False" />
+                <TextBox
+                    Grid.Row="6"
+                    Margin="3"
+                    Text="{Binding DescriptionMethod}"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
