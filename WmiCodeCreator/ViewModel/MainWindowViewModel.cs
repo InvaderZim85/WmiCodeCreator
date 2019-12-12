@@ -104,9 +104,12 @@ namespace WmiCodeCreator.ViewModel
         /// </summary>
         public async void InitWmiManager()
         {
+            var msg = "Please wait while loading the namespaces...";
             var controller =
                 await _dialogCoordinator.ShowProgressAsync(this, "Loading",
                     "Please wait while loading the namespaces...");
+
+            WmiHelper.InfoEvent += m => controller.SetMessage(msg + Environment.NewLine + m);
 
             controller.SetIndeterminate();
             try

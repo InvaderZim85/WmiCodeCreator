@@ -14,14 +14,25 @@ namespace WmiCodeCreator.Business
     internal static class WmiHelper
     {
         /// <summary>
+        /// The delegate for the <see cref="WmiHelper.InfoEvent"/>
+        /// </summary>
+        /// <param name="message">The message</param>
+        public delegate void InfoEventHandler(string message);
+
+        /// <summary>
+        /// Provides information
+        /// </summary>
+        public static event InfoEventHandler InfoEvent;
+
+        /// <summary>
         /// Contains the list with the namespaces
         /// </summary>
-        private static readonly List<NamespaceItem> _namespaceList = new List<NamespaceItem>();
+        private static readonly List<NamespaceItem> NamespaceList = new List<NamespaceItem>();
 
         /// <summary>
         /// Gets the list with the namespaces
         /// </summary>
-        public static List<NamespaceItem> Namespaces => _namespaceList.OrderBy(o => o.Name).ToList();
+        public static List<NamespaceItem> Namespaces => NamespaceList.OrderBy(o => o.Name).ToList();
 
         /// <summary>
         /// Creates the <see cref="ManagementClass"/> object for the search
@@ -100,8 +111,9 @@ namespace WmiCodeCreator.Business
                 foreach (var ns in nsClass.GetInstances())
                 {
                     var nsName = $"{root}\\{ns["Name"]}";
+                    InfoEvent?.Invoke($"Current namespace: {nsName} ({NamespaceList.Count} namespaces found)");
 
-                    _namespaceList.Add(new NamespaceItem(nsName));
+                    NamespaceList.Add(new NamespaceItem(nsName));
 
                     LoadNamespaces(nsName);
                 }
@@ -131,9 +143,11 @@ namespace WmiCodeCreator.Business
             var result = new List<ClassItem>();
             foreach (var wmiClass in searcher.Get())
             {
+                var name = wmiClass["__CLASS"].ToString();
+                InfoEvent?.Invoke($"{result.Count,4} - current class: {name}");
                 if (browseTab)
                 {
-                    var classItem = new ClassItem(wmiClass["__CLASS"].ToString());
+                    var classItem = new ClassItem(name);
                     classItem.Description = LoadClassDescription(namespaceName, classItem.Name);
                     result.Add(classItem);
                 }
@@ -143,9 +157,7 @@ namespace WmiCodeCreator.Business
                     {
                         if (qualifier.Name.EqualsIgnoreCase("dynamic") || qualifier.Name.EqualsIgnoreCase("static"))
                         {
-                            var classItem = new ClassItem(wmiClass["__CLASS"].ToString());
-                            classItem.Description = LoadClassDescription(namespaceName, classItem.Name);
-
+                            var classItem = new ClassItem(name);
                             result.Add(classItem);
                         }
                     }

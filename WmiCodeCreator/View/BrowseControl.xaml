@@ -43,7 +43,6 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -108,11 +107,10 @@
                 <Button
                     Grid.Row="5"
                     Grid.Column="1"
-                    Width="110"
                     Margin="3"
                     HorizontalAlignment="Right"
-                    Command="{Binding LoadMethodsCommand}"
-                    Content="Load Methods" />
+                    Command="{Binding LoadAdditionalDataCommand}"
+                    Content="Load additional data" />
                 <Label
                     Grid.Row="6"
                     Grid.Column="0"
@@ -128,27 +126,18 @@
                     Grid.Row="6"
                     Grid.Column="2"
                     Content="{Binding Methods.Count}" />
-
-                <Button
-                    Grid.Row="8"
-                    Grid.Column="1"
-                    Width="110"
-                    Margin="3"
-                    HorizontalAlignment="Right"
-                    Command="{Binding LoadQualifierCommand}"
-                    Content="Load qualifiers" />
                 <Label
-                    Grid.Row="9"
+                    Grid.Row="8"
                     Grid.Column="0"
                     Content="Qualifiers:" />
                 <ListBox
-                    Grid.Row="9"
+                    Grid.Row="8"
                     Grid.RowSpan="2"
                     Grid.Column="1"
                     Margin="3"
                     ItemsSource="{Binding Qualifier}" />
                 <Label
-                    Grid.Row="9"
+                    Grid.Row="8"
                     Grid.Column="2"
                     Content="{Binding Qualifier.Count}" />
             </Grid>

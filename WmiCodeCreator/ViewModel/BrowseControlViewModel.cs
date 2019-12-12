@@ -247,12 +247,7 @@ namespace WmiCodeCreator.ViewModel
         /// <summary>
         /// The command to load the methods
         /// </summary>
-        public ICommand LoadMethodsCommand => new DelegateCommand(LoadMethods);
-
-        /// <summary>
-        /// The command to load the qualifier
-        /// </summary>
-        public ICommand LoadQualifierCommand => new DelegateCommand(LoadQualifier);
+        public ICommand LoadAdditionalDataCommand => new DelegateCommand(LoadAdditionalData);
 
         /// <summary>
         /// Loads the classes
@@ -268,8 +263,12 @@ namespace WmiCodeCreator.ViewModel
                 return;
             }
 
+            var msg = "Please wait while loading the classes...";
             var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the classes");
+                await _dialogCoordinator.ShowProgressAsync(this, "Loading", msg);
+            controller.SetIndeterminate();
+
+            WmiHelper.InfoEvent += m => controller.SetMessage($"{msg}\r\n\r\n{m}");
 
             try
             {
@@ -319,7 +318,7 @@ namespace WmiCodeCreator.ViewModel
         /// <summary>
         /// Loads the methods of the class
         /// </summary>
-        private async void LoadMethods()
+        private async void LoadAdditionalData()
         {
             if (SelectedNamespace == null || SelectedClass == null)
                 return;
@@ -331,47 +330,19 @@ namespace WmiCodeCreator.ViewModel
             }
 
             var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the methods");
+                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the methods...");
             controller.SetIndeterminate();
 
             try
             {
+                // Step 1: Load the methods
                 var methods = await Task.Run(() => WmiHelper.LoadMethods(SelectedNamespace.Name, SelectedClass.Name));
 
                 Methods = methods;
                 SelectedClass.Methods = methods;
-            }
-            catch (ManagementException mex)
-            {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
-                    $"An error has occured while loading the methods.\r\n\r\nMessage: {mex.Message}");
-            }
-            finally
-            {
-                await controller.CloseAsync();
-            }
-        }
 
-        /// <summary>
-        /// Loads the qualifier of the class
-        /// </summary>
-        private async void LoadQualifier()
-        {
-            if (SelectedNamespace == null || SelectedClass == null)
-                return;
-
-            if (SelectedClass.Qualifiers != null && SelectedClass.Qualifiers.Any())
-            {
-                Qualifier = SelectedClass.Qualifiers;
-                return;
-            }
-
-            var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the qualifier");
-            controller.SetIndeterminate();
-
-            try
-            {
+                // Step 2: Load the qualifier
+                controller.SetMessage("Please wait while loading the qualifiers...");
                 var qualifier =
                     await Task.Run(() => WmiHelper.LoadQualifiers(SelectedNamespace.Name, SelectedClass.Name));
 
@@ -381,7 +352,7 @@ namespace WmiCodeCreator.ViewModel
             catch (ManagementException mex)
             {
                 await _dialogCoordinator.ShowMessageAsync(this, "Error",
-                    $"An error has occured while loading the qualifier.\r\n\r\nMessage: {mex.Message}");
+                    $"An error has occured while loading the methods.\r\n\r\nMessage: {mex.Message}");
             }
             finally
             {
