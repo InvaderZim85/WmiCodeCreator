@@ -19,13 +19,8 @@ namespace WmiCodeCreator.ViewModel
     /// <summary>
     /// Provides the logic for the query control
     /// </summary>
-    internal class QueryControlViewModel : ObservableObject
+    internal class QueryControlViewModel : ViewModelBase
     {
-        /// <summary>
-        /// Contains the instance of the mah apps dialog coordinator
-        /// </summary>
-        private IDialogCoordinator _dialogCoordinator;
-
         /// <summary>
         /// The action to set the source code
         /// </summary>
@@ -178,7 +173,7 @@ namespace WmiCodeCreator.ViewModel
         /// <param name="setPropertyText">The action to set the property text</param>
         public void InitViewModel(IDialogCoordinator dialogCoordinator, Action<string> setSourceCode, Action<string> setPropertyText)
         {
-            _dialogCoordinator = dialogCoordinator;
+            SetDialogCoordinator(dialogCoordinator);
 
             _setSourceCode = setSourceCode;
             _setPropertyText = setPropertyText;
@@ -223,19 +218,26 @@ namespace WmiCodeCreator.ViewModel
             if (string.IsNullOrEmpty(SelectedNamespace?.Name))
                 return;
 
-            var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the classes");
+            var msg = "Please wait while loading the classes...";
+            var controller = await ShowProgress("Loading", msg);
+            controller.SetIndeterminate();
+
+            WmiHelper.InfoEvent += m => controller.SetMessage($"{msg}\r\n\r\n{m}");
 
             try
             {
-                var classes = await Task.Run(() => WmiHelper.LoadClasses(SelectedNamespace.Name, false));
+                var classes = await ExecuteAction(token => WmiHelper.LoadClasses(SelectedNamespace.Name, false, token));
                 Classes = classes;
                 SelectedNamespace.Classes = classes;
             }
             catch (ManagementException mex)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
-                    $"An error has occured while loading the classes.\r\n\r\nMessage: {mex.Message}");
+                await ShowMessage("Error", $"An error has occured while loading the classes.\r\n\r\nMessage: {mex.Message}");
+            }
+            catch (Exception ex)
+            {
+                await ShowMessage("Error",
+                    $"An error has occured while loading the classes.\r\n\r\nMessage: {ex.Message}");
             }
             finally
             {
@@ -251,12 +253,12 @@ namespace WmiCodeCreator.ViewModel
             if (string.IsNullOrEmpty(SelectedNamespace?.Name) || string.IsNullOrEmpty(SelectedClass?.Name))
                 return;
 
-            var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the properties");
+            var controller = await ShowProgress("Loading", "Please wait while loading the properties");
 
             try
             {
-                var properties = await Task.Run(() => WmiHelper.LoadProperties(SelectedNamespace.Name, SelectedClass.Name));
+                var properties = await ExecuteAction(token =>
+                    WmiHelper.LoadProperties(SelectedNamespace.Name, SelectedClass.Name, token));
                 Properties = properties;
                 SelectedClass.Properties = properties;
 
@@ -264,8 +266,7 @@ namespace WmiCodeCreator.ViewModel
             }
             catch (ManagementException mex)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
-                    $"An error has occured while loading the properties.\r\n\r\nMessage: {mex.Message}");
+                await ShowMessage("Error", $"An error has occured while loading the properties.\r\n\r\nMessage: {mex.Message}");
             }
             finally
             {
@@ -286,7 +287,7 @@ namespace WmiCodeCreator.ViewModel
             var token = cancellationTokenSource.Token;
 
             var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the values.");
+                await ShowProgress("Loading", "Please wait while loading the values.");
             controller.SetIndeterminate();
 
             try
@@ -297,17 +298,17 @@ namespace WmiCodeCreator.ViewModel
             }
             catch (ManagementException mex)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                await ShowMessage("Error",
                     $"An error has occured while loading the values.\r\n\r\nMessage: {mex.Message}");
             }
             catch (TaskCanceledException)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Warning",
+                await ShowMessage("Warning",
                     "The process takes longer than expected and was aborted.");
             }
             catch (Exception ex)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                await ShowMessage("Error",
                     $"An error has occured while loading the values.\r\n\r\nMessage: {ex.Message}");
             }
             finally
@@ -324,6 +325,7 @@ namespace WmiCodeCreator.ViewModel
         private void SetPropertyText(List<string> values)
         {
             var sb = new StringBuilder();
+            sb.AppendLine($"{values.Count} instances found");
 
             var count = 1;
             foreach (var entry in values.Distinct())
@@ -343,12 +345,18 @@ namespace WmiCodeCreator.ViewModel
         {
             try
             {
+                if (SelectedProperties == null || !SelectedProperties.Any())
+                {
+                    _setSourceCode("// Select a property from the left...");
+                    return;
+                }
+
                 _sourceCode = CodeCreator.CreateCSharpCode(SelectedNamespace, SelectedClass, SelectedProperties);
                 _setSourceCode(_sourceCode);
             }
             catch (Exception ex)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                await ShowMessage("Error",
                     $"An error has occured while creating the code.\r\n\r\nMessage: {ex.Message}");
             }
         }

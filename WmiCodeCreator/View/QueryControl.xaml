@@ -166,7 +166,8 @@
                         x:Name="CodeEditorControl"
                         BorderBrush="LightGray"
                         BorderThickness="1"
-                        SyntaxHighlighting="C#" />
+                        SyntaxHighlighting="C#"
+                        Text="// Select a property from the left..." />
 
                     <Button
                         Grid.Row="1"

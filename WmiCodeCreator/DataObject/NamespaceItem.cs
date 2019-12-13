@@ -13,9 +13,14 @@ namespace WmiCodeCreator.DataObject
         public string Name { get; }
 
         /// <summary>
-        /// Gets or sets the classes of the namespace
+        /// Gets or sets the classes of the namespace (only static or dynamic classes)
         /// </summary>
         public List<ClassItem> Classes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the classes of the namespaces
+        /// </summary>
+        public List<ClassItem> ClassesCompleteList { get; set; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="NamespaceItem"/>

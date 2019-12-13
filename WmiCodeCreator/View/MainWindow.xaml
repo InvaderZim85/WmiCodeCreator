@@ -38,7 +38,9 @@
         </Menu>
 
         <StatusBar DockPanel.Dock="Bottom">
-            <StatusBarItem Content="Version" />
+            <StatusBarItem Content="{Binding Version}" />
+            <Separator />
+            <StatusBarItem Content="{Binding ControlDescription}" />
         </StatusBar>
 
         <ContentControl Content="{Binding Control}" />

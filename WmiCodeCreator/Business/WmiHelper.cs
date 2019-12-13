@@ -30,6 +30,11 @@ namespace WmiCodeCreator.Business
         private static readonly List<NamespaceItem> NamespaceList = new List<NamespaceItem>();
 
         /// <summary>
+        /// The amount of namespaces which were skipped due to missing permission
+        /// </summary>
+        private static int _skipCount = 0;
+
+        /// <summary>
         /// Gets the list with the namespaces
         /// </summary>
         public static List<NamespaceItem> Namespaces => NamespaceList.OrderBy(o => o.Name).ToList();
@@ -111,7 +116,8 @@ namespace WmiCodeCreator.Business
                 foreach (var ns in nsClass.GetInstances())
                 {
                     var nsName = $"{root}\\{ns["Name"]}";
-                    InfoEvent?.Invoke($"Current namespace: {nsName} ({NamespaceList.Count} namespaces found)");
+                    InfoEvent?.Invoke($"> current namespace: {GetNamespacePath(nsName)}{Environment.NewLine}" +
+                                      $"> {NamespaceList.Count} namespaces found / {_skipCount} skipped");
 
                     NamespaceList.Add(new NamespaceItem(nsName));
 
@@ -121,6 +127,7 @@ namespace WmiCodeCreator.Business
             catch (ManagementException)
             {
                 // Skip the error. It was fired because of insufficient permissions
+                _skipCount++;
             }
         }
 
@@ -129,10 +136,11 @@ namespace WmiCodeCreator.Business
         /// </summary>
         /// <param name="namespaceName">The name of the namespace</param>
         /// <param name="browseTab">true to load all classes, false to load only dynamic and static classes</param>
+        /// <param name="cancellationToken">The token to cancel the execution</param>
         /// <returns>The list with the classes</returns>
         /// <exception cref="ArgumentNullException">Will be thrown when the namespace name is null or empty</exception>
         /// <exception cref="ManagementException">Will be thrown when an error occured in the management object searcher</exception>
-        public static List<ClassItem> LoadClasses(string namespaceName, bool browseTab)
+        public static List<ClassItem> LoadClasses(string namespaceName, bool browseTab, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(namespaceName))
                 throw new ArgumentNullException(nameof(namespaceName));
@@ -143,6 +151,9 @@ namespace WmiCodeCreator.Business
             var result = new List<ClassItem>();
             foreach (var wmiClass in searcher.Get())
             {
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
                 var name = wmiClass["__CLASS"].ToString();
                 InfoEvent?.Invoke($"{result.Count,4} - current class: {name}");
                 if (browseTab)
@@ -193,10 +204,11 @@ namespace WmiCodeCreator.Business
         /// </summary>
         /// <param name="namespaceName">The name of the namespace</param>
         /// <param name="className">The name of the class</param>
+        /// <param name="cancellationToken">The token to cancel the execution</param>
         /// <returns>THe list with the properties</returns>
         /// <exception cref="ArgumentNullException">Will be thrown when the namespace name or the class name is null or empty</exception>
         /// <exception cref="ManagementException">Will be thrown when an error occured in the management class</exception>
-        public static List<PropertyItem> LoadProperties(string namespaceName, string className)
+        public static List<PropertyItem> LoadProperties(string namespaceName, string className, CancellationToken cancellationToken)
         {
             var mClass = CreateManagementClass(namespaceName, className, true);
 
@@ -204,6 +216,9 @@ namespace WmiCodeCreator.Business
 
             foreach (var entry in mClass.Properties)
             {
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
                 var property = new PropertyItem(entry.Name, entry.Type);
 
                 var (descriptionList, qualifierList) = GetQualifierData(entry.Qualifiers);
@@ -224,11 +239,11 @@ namespace WmiCodeCreator.Business
         /// </summary>
         /// <param name="namespaceName">The name of the namespace</param>
         /// <param name="className">The name of the class</param>
-        /// <param name="token">The token to cancel the action</param>
+        /// <param name="cancellationToken">The token to cancel the execution</param>
         /// <returns>The list with the values</returns>
         /// <exception cref="ArgumentNullException">Will be thrown when the namespace name or the class name is null or empty</exception>
         /// <exception cref="ManagementException">Will be thrown when an error occured in the management class</exception>
-        public static List<string> LoadValues(string namespaceName, string className, CancellationToken token)
+        public static List<string> LoadValues(string namespaceName, string className, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(namespaceName))
                 throw new ArgumentNullException(nameof(namespaceName));
@@ -243,8 +258,8 @@ namespace WmiCodeCreator.Business
             var result = new List<string>();
             foreach (var wmiObject in searcher.Get())
             {
-                if (token.IsCancellationRequested)
-                    token.ThrowIfCancellationRequested();
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
 
                 // NOTE: Currently only 'TextFormat.Mof' is supported by the 'GetText' method!
                 result.Add(wmiObject.GetText(TextFormat.Mof));
@@ -258,14 +273,18 @@ namespace WmiCodeCreator.Business
         /// </summary>
         /// <param name="namespaceName">The name of the namespace</param>
         /// <param name="className">The name of the class</param>
+        /// <param name="cancellationToken">The token to cancel the execution</param>
         /// <returns>The list with the methods</returns>
-        public static List<MethodItem> LoadMethods(string namespaceName, string className)
+        public static List<MethodItem> LoadMethods(string namespaceName, string className, CancellationToken cancellationToken)
         {
             var mClass = CreateManagementClass(namespaceName, className, false);
 
             var result = new List<MethodItem>();
             foreach (var entry in mClass.Methods)
             {
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
                 var method = new MethodItem(entry.Name);
 
                 var (descriptionList, qualifierList) = GetQualifierData(entry.Qualifiers);
@@ -285,15 +304,43 @@ namespace WmiCodeCreator.Business
         /// </summary>
         /// <param name="namespaceName">The name of the namespace</param>
         /// <param name="className">The name of the class</param>
+        /// <param name="cancellationToken">The token to cancel the execution</param>
         /// <returns>The list with the qualifiers</returns>
-        public static List<string> LoadQualifiers(string namespaceName, string className)
+        public static List<string> LoadQualifiers(string namespaceName, string className, CancellationToken cancellationToken)
         {
             var mClass = CreateManagementClass(namespaceName, className, true);
 
             var result = new List<string>();
             foreach (var entry in mClass.Qualifiers)
             {
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
                 result.Add(entry.Name);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Converts the path of the namespace so that is not to long
+        /// </summary>
+        /// <param name="original">The original namespace path</param>
+        /// <returns>The converts path</returns>
+        private static string GetNamespacePath(string original)
+        {
+            if (original.Length <= 45)
+                return original;
+
+            var content = original.Split(new[] { "\\" }, StringSplitOptions.RemoveEmptyEntries);
+
+            var result = "";
+            for (var i = 0; i < content.Length; i++)
+            {
+                if (i != 1)
+                    result += $"\\{content[i]}";
+                else
+                    result += "\\...";
             }
 
             return result;

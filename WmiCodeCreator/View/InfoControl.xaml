@@ -41,6 +41,14 @@
                 Height="40"
                 Margin="3"
                 Kind="LanguageCsharp" />
+            <Line
+                Margin="3"
+                Stroke="Black"
+                StrokeThickness="4"
+                X1="0"
+                X2="20"
+                Y1="22"
+                Y2="22" />
             <iconPacks:PackIconFontAwesome
                 Width="40"
                 Height="40"

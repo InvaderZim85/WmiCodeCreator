@@ -18,13 +18,8 @@ namespace WmiCodeCreator.ViewModel
     /// <summary>
     /// Provides the logic for the main window (MVVM pattern)
     /// </summary>
-    internal class MainWindowViewModel : ObservableObject
+    internal class MainWindowViewModel : ViewModelBase
     {
-        /// <summary>
-        /// Contains the instance of the mah apps dialog coordinator
-        /// </summary>
-        private IDialogCoordinator _dialogCoordinator;
-
         /// <summary>
         /// Contains the dictionary with the controls
         /// </summary>
@@ -59,20 +54,6 @@ namespace WmiCodeCreator.ViewModel
         }
 
         /// <summary>
-        /// Backing field for <see cref="Title"/>
-        /// </summary>
-        private string _title = "WMI Code Creator";
-
-        /// <summary>
-        /// Gets or sets the title of the main window
-        /// </summary>
-        public string Title
-        {
-            get => _title;
-            set => SetField(ref _title, value);
-        }
-
-        /// <summary>
         /// Backing field for <see cref="Version"/>
         /// </summary>
         private string _version = "Version: /";
@@ -92,9 +73,9 @@ namespace WmiCodeCreator.ViewModel
         /// <param name="dialogCoordinator">The instance of the mah apps dialog coordinator</param>
         public void InitViewModel(IDialogCoordinator dialogCoordinator)
         {
-            _dialogCoordinator = dialogCoordinator;
+            SetDialogCoordinator(dialogCoordinator);
 
-            Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            Version = $"Version: {Assembly.GetExecutingAssembly().GetName().Version}";
 
             SwitchControl(MenuType.Info);
         }
@@ -106,10 +87,10 @@ namespace WmiCodeCreator.ViewModel
         {
             var msg = "Please wait while loading the namespaces...";
             var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading",
+                await ShowProgress("Loading",
                     "Please wait while loading the namespaces...");
 
-            WmiHelper.InfoEvent += m => controller.SetMessage(msg + Environment.NewLine + m);
+            WmiHelper.InfoEvent += m => controller.SetMessage($"{msg}\r\n\r\n{m}");
 
             controller.SetIndeterminate();
             try
@@ -118,7 +99,7 @@ namespace WmiCodeCreator.ViewModel
             }
             catch (ManagementException mex)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                await ShowMessage("Error",
                     $"An error has occured while preparing the WMI helper.\r\n\r\nMessage: {mex.Message}");
             }
             finally
@@ -162,7 +143,7 @@ namespace WmiCodeCreator.ViewModel
                         Process.Start(path);
                         return;
                     default:
-                        await _dialogCoordinator.ShowMessageAsync(this, "Error", "The given type is not supported.");
+                        await ShowMessage("Error", "The given type is not supported.");
                         break;
                 }
 
@@ -173,7 +154,7 @@ namespace WmiCodeCreator.ViewModel
                 return;
 
             ControlDescription = control.Description;
-            control.InitControl(_dialogCoordinator);
+            control.InitControl(DialogCoordinator.Instance);
 
             Control = control;
         }

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using MahApps.Metro.Controls.Dialogs;
 using WmiCodeCreator.Business;
@@ -12,13 +10,8 @@ using ZimLabs.WpfBase;
 
 namespace WmiCodeCreator.ViewModel
 {
-    internal class BrowseControlViewModel : ObservableObject
+    internal class BrowseControlViewModel : ViewModelBase
     {
-        /// <summary>
-        /// Contains the instance of the mah apps dialog coordinator
-        /// </summary>
-        private IDialogCoordinator _dialogCoordinator;
-
         /// <summary>
         /// Backing field for <see cref="Namespaces"/>
         /// </summary>
@@ -48,9 +41,9 @@ namespace WmiCodeCreator.ViewModel
             {
                 if (SetField(ref _selectedNamespace, value) && value != null)
                 {
-                    if (value.Classes != null && value.Classes.Any())
+                    if (value.ClassesCompleteList != null && value.ClassesCompleteList.Any())
                     {
-                        Classes = value.Classes;
+                        Classes = value.ClassesCompleteList;
                     }
                     else
                     {
@@ -239,7 +232,7 @@ namespace WmiCodeCreator.ViewModel
         /// <param name="dialogCoordinator">The instance of the mah apps dialog coordinator</param>
         public void InitViewModel(IDialogCoordinator dialogCoordinator)
         {
-            _dialogCoordinator = dialogCoordinator;
+            SetDialogCoordinator(dialogCoordinator);
 
             Namespaces = WmiHelper.Namespaces;
         }
@@ -265,21 +258,26 @@ namespace WmiCodeCreator.ViewModel
 
             var msg = "Please wait while loading the classes...";
             var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", msg);
+                await ShowProgress("Loading", msg);
             controller.SetIndeterminate();
 
             WmiHelper.InfoEvent += m => controller.SetMessage($"{msg}\r\n\r\n{m}");
 
             try
             {
-                var classes = await Task.Run(() => WmiHelper.LoadClasses(SelectedNamespace.Name, true));
+                var classes = await ExecuteAction(token => WmiHelper.LoadClasses(SelectedNamespace.Name, true, token));
                 Classes = classes;
-                SelectedNamespace.Classes = classes;
+                SelectedNamespace.ClassesCompleteList = classes;
             }
             catch (ManagementException mex)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                await ShowMessage("Error",
                     $"An error has occured while loading the classes.\r\n\r\nMessage: {mex.Message}");
+            }
+            catch (Exception ex)
+            {
+                await ShowMessage("Error",
+                    $"An error has occured while loading the classes.\r\n\r\nMessage: {ex.Message}");
             }
             finally
             {
@@ -296,17 +294,18 @@ namespace WmiCodeCreator.ViewModel
                 return;
 
             var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the properties");
+                await ShowProgress("Loading", "Please wait while loading the properties");
 
             try
             {
-                var properties = await Task.Run(() => WmiHelper.LoadProperties(SelectedNamespace.Name, SelectedClass.Name));
+                var properties = await ExecuteAction(token =>
+                    WmiHelper.LoadProperties(SelectedNamespace.Name, SelectedClass.Name, token));
                 Properties = properties;
                 SelectedClass.Properties = properties;
             }
             catch (ManagementException mex)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                await ShowMessage("Error",
                     $"An error has occured while loading the properties.\r\n\r\nMessage: {mex.Message}");
             }
             finally
@@ -330,28 +329,26 @@ namespace WmiCodeCreator.ViewModel
             }
 
             var controller =
-                await _dialogCoordinator.ShowProgressAsync(this, "Loading", "Please wait while loading the methods...");
+                await ShowProgress("Loading", "Please wait while loading the methods...");
             controller.SetIndeterminate();
 
             try
             {
-                // Step 1: Load the methods
-                var methods = await Task.Run(() => WmiHelper.LoadMethods(SelectedNamespace.Name, SelectedClass.Name));
-
+                var methods = await ExecuteAction(token => WmiHelper.LoadMethods(SelectedNamespace.Name, SelectedClass.Name, token));
                 Methods = methods;
                 SelectedClass.Methods = methods;
 
                 // Step 2: Load the qualifier
                 controller.SetMessage("Please wait while loading the qualifiers...");
-                var qualifier =
-                    await Task.Run(() => WmiHelper.LoadQualifiers(SelectedNamespace.Name, SelectedClass.Name));
+                var qualifier = await ExecuteAction(token =>
+                    WmiHelper.LoadQualifiers(SelectedNamespace.Name, SelectedClass.Name, token));
 
-                Qualifier = qualifier;
+                    Qualifier = qualifier;
                 SelectedClass.Qualifiers = qualifier;
             }
             catch (ManagementException mex)
             {
-                await _dialogCoordinator.ShowMessageAsync(this, "Error",
+                await ShowMessage("Error",
                     $"An error has occured while loading the methods.\r\n\r\nMessage: {mex.Message}");
             }
             finally
