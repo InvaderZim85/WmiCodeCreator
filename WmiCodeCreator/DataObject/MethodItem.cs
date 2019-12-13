@@ -1,20 +1,12 @@
-﻿namespace WmiCodeCreator.DataObject
+﻿using System.Management;
+
+namespace WmiCodeCreator.DataObject
 {
     /// <summary>
     /// Represents a method of a WMI class
     /// </summary>
-    internal class MethodItem
+    internal class MethodItem : BaseItem
     {
-        /// <summary>
-        /// Gets the name
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
-        /// Gets or sets the description of the method
-        /// </summary>
-        public string Description { get; set; }
-
         /// <summary>
         /// Creates a new instance of the <see cref="MethodItem"/>
         /// </summary>
@@ -31,6 +23,15 @@
         public override string ToString()
         {
             return Name;
+        }
+
+        /// <summary>
+        /// Converts the given <see cref="WmiDataItem"/> object into a <see cref="MethodItem"/> object
+        /// </summary>
+        /// <param name="data">The original object</param>
+        public static explicit operator MethodItem(WmiDataItem data)
+        {
+            return new MethodItem(data.Name);
         }
     }
 }

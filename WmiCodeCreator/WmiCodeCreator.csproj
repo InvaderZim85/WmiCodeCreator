@@ -122,6 +122,7 @@
     </Compile>
     <Compile Include="Business\CodeCreator.cs" />
     <Compile Include="Business\WmiHelper.cs" />
+    <Compile Include="DataObject\BaseItem.cs" />
     <Compile Include="DataObject\ClassItem.cs" />
     <Compile Include="DataObject\MethodItem.cs" />
     <Compile Include="DataObject\NamespaceItem.cs" />
@@ -131,6 +132,7 @@
     <Content Include="Templates\CSharpClassTemplate.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Compile Include="DataObject\WmiDataItem.cs" />
     <Compile Include="ViewModel\BrowseControlViewModel.cs" />
     <Compile Include="ViewModel\MainWindowViewModel.cs" />
     <Compile Include="ViewModel\QueryControlViewModel.cs" />
@@ -176,7 +178,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="Manual.pdf" />
+    <None Include="Manual.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

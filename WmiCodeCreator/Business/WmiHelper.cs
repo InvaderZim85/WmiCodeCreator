@@ -212,26 +212,79 @@ namespace WmiCodeCreator.Business
         {
             var mClass = CreateManagementClass(namespaceName, className, true);
 
-            var result = new List<PropertyItem>();
+            return GetClassData<PropertyItem>(mClass.Properties, cancellationToken);
+        }
 
-            foreach (var entry in mClass.Properties)
+        /// <summary>
+        /// Loads the methods of the class
+        /// </summary>
+        /// <param name="namespaceName">The name of the namespace</param>
+        /// <param name="className">The name of the class</param>
+        /// <param name="cancellationToken">The token to cancel the execution</param>
+        /// <returns>The list with the methods</returns>
+        public static List<MethodItem> LoadMethods(string namespaceName, string className, CancellationToken cancellationToken)
+        {
+            var mClass = CreateManagementClass(namespaceName, className, false);
+
+            return GetClassData<MethodItem>(mClass.Methods, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the data of the given collection
+        /// </summary>
+        /// <typeparam name="T">The type of the expected data</typeparam>
+        /// <param name="collection">The collection</param>
+        /// <param name="token">The token to cancel the execution</param>
+        /// <returns>The list with the data</returns>
+        private static List<T> GetClassData<T>(object collection, CancellationToken token)
+        {
+            var tmpResult = new List<object>();
+            var tempCollection = new List<WmiDataItem>();
+
+            // Get the data from the collections
+            if (collection is MethodDataCollection methodCollection)
             {
-                if (cancellationToken.IsCancellationRequested)
-                    cancellationToken.ThrowIfCancellationRequested();
+                foreach (var entry in methodCollection)
+                {
+                    if (token.IsCancellationRequested)
+                        token.ThrowIfCancellationRequested();
 
-                var property = new PropertyItem(entry.Name, entry.Type);
+                    tempCollection.Add((WmiDataItem) entry);
+                }
+            }
+            else if (collection is PropertyDataCollection propertyCollection)
+            {
+                foreach (var entry in propertyCollection)
+                {
+                    if (token.IsCancellationRequested)
+                        token.ThrowIfCancellationRequested();
 
-                var (descriptionList, qualifierList) = GetQualifierData(entry.Qualifiers);
-
-                var tmpDescription = string.Join(Environment.NewLine, descriptionList) + Environment.NewLine +
-                                     Environment.NewLine + string.Join(Environment.NewLine, qualifierList);
-
-                property.Description = tmpDescription;
-
-                result.Add(property);
+                    tempCollection.Add((WmiDataItem)entry);
+                }
             }
 
-            return result.OrderBy(o => o.Name).ToList();
+            // Load the descriptions
+            foreach (var entry in tempCollection)
+            {
+                var (description, qualifier) = GetQualifierData(entry.Qualifiers);
+                var tmpDescription = string.Join(Environment.NewLine, description) + Environment.NewLine +
+                                     Environment.NewLine + string.Join(Environment.NewLine, qualifier);
+
+                if (entry.DataType == WmiDataItem.DataTypes.Method)
+                {
+                    var item = (MethodItem) entry;
+                    item.Description = tmpDescription;
+                    tmpResult.Add(item);
+                }
+                else if (entry.DataType == WmiDataItem.DataTypes.Property)
+                {
+                    var item = (PropertyItem) entry;
+                    item.Description = tmpDescription;
+                    tmpResult.Add(item);
+                }
+            }
+
+            return tmpResult.Select(s => (T) Convert.ChangeType(s, typeof(T))).ToList();
         }
 
         /// <summary>
@@ -263,37 +316,6 @@ namespace WmiCodeCreator.Business
 
                 // NOTE: Currently only 'TextFormat.Mof' is supported by the 'GetText' method!
                 result.Add(wmiObject.GetText(TextFormat.Mof));
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Loads the methods of the class
-        /// </summary>
-        /// <param name="namespaceName">The name of the namespace</param>
-        /// <param name="className">The name of the class</param>
-        /// <param name="cancellationToken">The token to cancel the execution</param>
-        /// <returns>The list with the methods</returns>
-        public static List<MethodItem> LoadMethods(string namespaceName, string className, CancellationToken cancellationToken)
-        {
-            var mClass = CreateManagementClass(namespaceName, className, false);
-
-            var result = new List<MethodItem>();
-            foreach (var entry in mClass.Methods)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                var method = new MethodItem(entry.Name);
-
-                var (descriptionList, qualifierList) = GetQualifierData(entry.Qualifiers);
-
-                var tmpDescription = string.Join(Environment.NewLine, descriptionList) + Environment.NewLine +
-                                     Environment.NewLine + string.Join(Environment.NewLine, qualifierList);
-
-                method.Description = tmpDescription;
-                result.Add(method);
             }
 
             return result;
@@ -337,10 +359,18 @@ namespace WmiCodeCreator.Business
             var result = "";
             for (var i = 0; i < content.Length; i++)
             {
-                if (i != 1)
-                    result += $"\\{content[i]}";
-                else
-                    result += "\\...";
+                switch (i)
+                {
+                    case 0:
+                        result = content[i];
+                        break;
+                    case 1:
+                        result += "\\...";
+                        break;
+                    default:
+                        result += $"\\{content[i]}";
+                        break;
+                }
             }
 
             return result;

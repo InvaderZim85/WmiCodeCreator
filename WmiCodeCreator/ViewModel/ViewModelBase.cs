@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Management;
 using System.Threading;
 using System.Threading.Tasks;
 using MahApps.Metro.Controls.Dialogs;
+using WmiCodeCreator.Business;
+using WmiCodeCreator.DataObject;
 using ZimLabs.WpfBase;
 
 namespace WmiCodeCreator.ViewModel
@@ -47,6 +52,89 @@ namespace WmiCodeCreator.ViewModel
                     "The execution was aborted due to an unusually long execution time.");
 
                 return default;
+            }
+        }
+
+        /// <summary>
+        /// Loads the classes
+        /// </summary>
+        /// <param name="selectedNamespace">The selected namespace</param>
+        /// <param name="completeList">true to get the complete list, otherwise false</param>
+        /// <returns>The list with the classes</returns>
+        protected async Task<List<ClassItem>> LoadClasses(NamespaceItem selectedNamespace, bool completeList)
+        {
+            if (selectedNamespace == null)
+                return new List<ClassItem>();
+
+            if (completeList && selectedNamespace.ClassesCompleteList != null &&
+                selectedNamespace.ClassesCompleteList.Any())
+            {
+                return selectedNamespace.ClassesCompleteList;
+            }
+
+            if (!completeList && selectedNamespace.Classes != null && selectedNamespace.Classes.Any())
+            {
+                return selectedNamespace.Classes;
+            }
+
+            var msg = "Please wait while loading the classes...";
+            var controller =
+                await ShowProgress("Loading", msg);
+            controller.SetIndeterminate();
+
+            WmiHelper.InfoEvent += m => controller.SetMessage($"{msg}\r\n\r\n{m}");
+
+            try
+            {
+                return await ExecuteAction(token => WmiHelper.LoadClasses(selectedNamespace.Name, true, token));
+            }
+            catch (ManagementException mex)
+            {
+                await ShowMessage("Error",
+                    $"An error has occured while loading the classes.\r\n\r\nMessage: {mex.Message}");
+                return new List<ClassItem>();
+            }
+            catch (Exception ex)
+            {
+                await ShowMessage("Error",
+                    $"An error has occured while loading the classes.\r\n\r\nMessage: {ex.Message}");
+                return new List<ClassItem>();
+            }
+            finally
+            {
+                await controller.CloseAsync();
+            }
+        }
+
+        /// <summary>
+        /// Loads the properties
+        /// </summary>
+        /// <param name="selectedNamespace">The selected namespace</param>
+        /// <param name="selectedClass">The selected class</param>
+        /// <returns>The list with the properties</returns>
+        protected async Task<List<PropertyItem>> LoadProperties(NamespaceItem selectedNamespace,
+            ClassItem selectedClass)
+        {
+            if (string.IsNullOrEmpty(selectedNamespace?.Name) || string.IsNullOrEmpty(selectedClass?.Name))
+                return new List<PropertyItem>();
+
+            var controller =
+                await ShowProgress("Loading", "Please wait while loading the properties");
+
+            try
+            {
+                return await ExecuteAction(token =>
+                    WmiHelper.LoadProperties(selectedNamespace.Name, selectedClass.Name, token));
+            }
+            catch (ManagementException mex)
+            {
+                await ShowMessage("Error",
+                    $"An error has occured while loading the properties.\r\n\r\nMessage: {mex.Message}");
+                return new List<PropertyItem>();
+            }
+            finally
+            {
+                await controller.CloseAsync();
             }
         }
 

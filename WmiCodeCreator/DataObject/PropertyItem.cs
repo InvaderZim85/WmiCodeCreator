@@ -5,22 +5,12 @@ namespace WmiCodeCreator.DataObject
     /// <summary>
     /// Represents a property of a WMI class
     /// </summary>
-    internal class PropertyItem
+    internal class PropertyItem : BaseItem
     {
-        /// <summary>
-        /// Gets the name of the property
-        /// </summary>
-        public string Name { get; }
-
         /// <summary>
         /// Gets the type of the property
         /// </summary>
         public string Type { get; }
-
-        /// <summary>
-        /// Gets or sets the description of the property
-        /// </summary>
-        public string Description { get; set; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="PropertyItem"/>
@@ -70,6 +60,15 @@ namespace WmiCodeCreator.DataObject
         public override string ToString()
         {
             return Name;
+        }
+
+        /// <summary>
+        /// Converts a <see cref="WmiDataItem"/> object into a <see cref="PropertyItem"/> object
+        /// </summary>
+        /// <param name="data">The original object</param>
+        public static explicit operator PropertyItem(WmiDataItem data)
+        {
+            return new PropertyItem(data.Name, data.Type);
         }
     }
 }

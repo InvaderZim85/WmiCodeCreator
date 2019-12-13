@@ -182,6 +182,14 @@ namespace WmiCodeCreator.ViewModel
         }
 
         /// <summary>
+        /// Loads the classes
+        /// </summary>
+        private async void LoadClasses()
+        {
+            Classes = await LoadClasses(SelectedNamespace, true);
+        }
+
+        /// <summary>
         /// The command to load the values
         /// </summary>
         public ICommand LoadValuesCommand => new DelegateCommand(LoadValues);
@@ -211,67 +219,12 @@ namespace WmiCodeCreator.ViewModel
         });
 
         /// <summary>
-        /// Loads the classes
-        /// </summary>
-        private async void LoadClasses()
-        {
-            if (string.IsNullOrEmpty(SelectedNamespace?.Name))
-                return;
-
-            var msg = "Please wait while loading the classes...";
-            var controller = await ShowProgress("Loading", msg);
-            controller.SetIndeterminate();
-
-            WmiHelper.InfoEvent += m => controller.SetMessage($"{msg}\r\n\r\n{m}");
-
-            try
-            {
-                var classes = await ExecuteAction(token => WmiHelper.LoadClasses(SelectedNamespace.Name, false, token));
-                Classes = classes;
-                SelectedNamespace.Classes = classes;
-            }
-            catch (ManagementException mex)
-            {
-                await ShowMessage("Error", $"An error has occured while loading the classes.\r\n\r\nMessage: {mex.Message}");
-            }
-            catch (Exception ex)
-            {
-                await ShowMessage("Error",
-                    $"An error has occured while loading the classes.\r\n\r\nMessage: {ex.Message}");
-            }
-            finally
-            {
-                await controller.CloseAsync();
-            }
-        }
-
-        /// <summary>
         /// Loads the properties of the selected class
         /// </summary>
         private async void LoadProperties()
         {
-            if (string.IsNullOrEmpty(SelectedNamespace?.Name) || string.IsNullOrEmpty(SelectedClass?.Name))
-                return;
-
-            var controller = await ShowProgress("Loading", "Please wait while loading the properties");
-
-            try
-            {
-                var properties = await ExecuteAction(token =>
-                    WmiHelper.LoadProperties(SelectedNamespace.Name, SelectedClass.Name, token));
-                Properties = properties;
-                SelectedClass.Properties = properties;
-
-                PropertyHeader = $"Properties ({properties.Count})";
-            }
-            catch (ManagementException mex)
-            {
-                await ShowMessage("Error", $"An error has occured while loading the properties.\r\n\r\nMessage: {mex.Message}");
-            }
-            finally
-            {
-                await controller.CloseAsync();
-            }
+            Properties = await LoadProperties(SelectedNamespace, SelectedClass);
+            SelectedClass.Properties = Properties;
         }
 
         /// <summary>
